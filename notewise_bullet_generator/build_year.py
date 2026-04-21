@@ -15,42 +15,81 @@ MONTH_NAMES = [
 ]
 
 
+HEADER_LINKS = [
+    ("INDEX", "INDEX"),
+    ("MOIS", "MONTHS"),
+    ("PARKING", "PARKING"),
+    ("PRIÈRES", "PRAYERS"),
+]
+
+
+def draw_header_links(c, rows: int, right_x: float | None = None) -> None:
+    """Dessine des liens en haut à droite, avec zones cliquables simples."""
+    y = gy(rows) + 3
+    x = right_x if right_x is not None else PAGE_WIDTH - MARGIN
+
+    # On dessine de droite à gauche pour garder un alignement robuste.
+    for label, target in reversed(HEADER_LINKS):
+        width_guess = max(26, len(label) * 4.8)
+        left = x - width_guess
+        text(c, left, y, label)
+        c.linkRect("", target, (left, y - 2, x, y + 9), relative=0, thickness=0)
+        x = left - 6
+
+
+def add_index_entry(c, label: str, row: int, target: str) -> None:
+    y = gy(row) - 3
+    x1 = gx(0)
+    x2 = gx(14)
+    text(c, x1, y, label)
+    c.linkRect("", target, (x1, y - 2, x2, y + 9), relative=0, thickness=0)
+
+
+
 def render_simple_index_page(c, title: str = "INDEX") -> None:
     cols, rows = grid_size()
+    c.bookmarkPage("INDEX")
+
     draw_dots(c)
     text(c, gx(0), gy(rows) + 3, title)
     text_right(c, PAGE_WIDTH - MARGIN, gy(rows) + 3, "INDEX")
 
-    # repères simples, à affiner ensuite
     lines = [
-        "Année / Semestres",
-        "Mois",
-        "Parking",
-        "Achats",
-        "Grandes idées",
-        "Prières",
+        ("Année / Semestres", "SEM1"),
+        ("Mois", "MONTHS"),
+        ("Parking", "PARKING"),
+        ("Achats", "ACHATS"),
+        ("Grandes idées", "IDEAS"),
+        ("Prières", "PRAYERS"),
     ]
     start_row = rows - 4
-    for i, value in enumerate(lines):
-        text(c, gx(0), gy(start_row - 2 * i) - 3, value)
+    for i, (value, target) in enumerate(lines):
+        add_index_entry(c, value, start_row - 2 * i, target)
 
 
 
-def render_simple_notes_page(c, header_left: str, header_right: str = "INDEX") -> None:
+def render_simple_notes_page(c, header_left: str, bookmark: str | None = None) -> None:
     cols, rows = grid_size()
+    if bookmark:
+        c.bookmarkPage(bookmark)
     draw_dots(c)
     text(c, gx(0), gy(rows) + 3, header_left)
-    text_right(c, PAGE_WIDTH - MARGIN, gy(rows) + 3, header_right)
+    text_right(c, PAGE_WIDTH - MARGIN, gy(rows) + 3, "INDEX")
+    c.linkRect("", "INDEX", (PAGE_WIDTH - MARGIN - 26, gy(rows) + 1, PAGE_WIDTH - MARGIN, gy(rows) + 11), relative=0, thickness=0)
 
 
 
-def render_month_page(c, month_name: str, start_day: int, day_count: int) -> None:
+def render_month_page(c, month_name: str, start_day: int, day_count: int, bookmark: str | None = None, include_months_bookmark: bool = False) -> None:
     cols, rows = grid_size()
+    if bookmark:
+        c.bookmarkPage(bookmark)
+    if include_months_bookmark:
+        c.bookmarkPage("MONTHS")
 
     draw_dots(c)
 
     text(c, gx(0), gy(rows) + 3, f"Mois de : {month_name}")
-    text_right(c, PAGE_WIDTH - MARGIN, gy(rows) + 3, "INDEX  MOIS  PARKING  PRIÈRES")
+    draw_header_links(c, rows)
 
     top_content_row = rows - 2
     bottom_boundary_row = top_content_row - day_count * 2
@@ -72,17 +111,19 @@ def render_month_page(c, month_name: str, start_day: int, day_count: int) -> Non
 
 
 
-def render_daily(c) -> None:
+def render_daily(c, page1_bookmark: str | None = None, page2_bookmark: str | None = None) -> None:
     cols, rows = grid_size()
 
     # page 1
+    if page1_bookmark:
+        c.bookmarkPage(page1_bookmark)
     draw_dots(c)
 
     top = rows
     text(c, gx(0), gy(top) + 3, "Date : ____________________")
     text(c, gx(10), gy(top) + 3, "Page : ____")
     text(c, gx(0), gy(top - 2) + 3, "Jour : ____________________")
-    text_right(c, PAGE_WIDTH - MARGIN, gy(top) + 3, "INDEX  MOIS  PARKING  PRIÈRES")
+    draw_header_links(c, rows)
 
     prio_top = top - 4
     prio_bottom = prio_top - 6
@@ -128,8 +169,10 @@ def render_daily(c) -> None:
     c.showPage()
 
     # page 2
+    if page2_bookmark:
+        c.bookmarkPage(page2_bookmark)
     draw_dots(c)
-    text_right(c, PAGE_WIDTH - MARGIN, gy(rows) + 3, "INDEX  MOIS  PARKING  PRIÈRES")
+    draw_header_links(c, rows)
 
 
 
@@ -143,27 +186,45 @@ def build(output_path: str | Path, daily_count: int = 14) -> None:
     render_simple_notes_page(c, "Abréviations / Conventions")
     c.showPage()
 
-    render_simple_notes_page(c, "Semestre 1")
+    render_simple_notes_page(c, "Semestre 1", bookmark="SEM1")
     c.showPage()
 
-    render_simple_notes_page(c, "Semestre 2")
+    render_simple_notes_page(c, "Semestre 2", bookmark="SEM2")
     c.showPage()
 
     # ---- 12 mois ----
-    for month_name in MONTH_NAMES:
-        render_month_page(c, month_name, start_day=1, day_count=15)
+    for idx, month_name in enumerate(MONTH_NAMES):
+        bookmark_left = f"MONTH_{idx+1:02d}_L"
+        bookmark_right = f"MONTH_{idx+1:02d}_R"
+        render_month_page(
+            c,
+            month_name,
+            start_day=1,
+            day_count=15,
+            bookmark=bookmark_left,
+            include_months_bookmark=(idx == 0),
+        )
         c.showPage()
-        render_month_page(c, month_name, start_day=16, day_count=16)
+        render_month_page(c, month_name, start_day=16, day_count=16, bookmark=bookmark_right)
         c.showPage()
 
     # ---- Collections fixes provisoires ----
-    for name in ["Parking", "Achats", "Grandes idées", "Prières 1", "Prières 2", "Prières 3", "Prières 4"]:
-        render_simple_notes_page(c, name)
+    collections = [
+        ("Parking", "PARKING"),
+        ("Achats", "ACHATS"),
+        ("Grandes idées", "IDEAS"),
+        ("Prières 1", "PRAYERS"),
+        ("Prières 2", None),
+        ("Prières 3", None),
+        ("Prières 4", None),
+    ]
+    for name, bookmark in collections:
+        render_simple_notes_page(c, name, bookmark=bookmark)
         c.showPage()
 
     # ---- Dailies de démonstration ----
-    for _ in range(daily_count):
-        render_daily(c)
+    for i in range(daily_count):
+        render_daily(c, page1_bookmark=f"DAILY_{i+1:03d}_A", page2_bookmark=f"DAILY_{i+1:03d}_B")
         c.showPage()
         c.showPage()
 

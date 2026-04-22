@@ -104,6 +104,18 @@ Contient les briques fondamentales :
 
 👉 Toute la logique graphique est centralisée ici.
 
+### 4.1.1 Règles techniques stables
+
+Le projet repose sur quelques règles strictes :
+
+- alignement sur une **grille 5 mm**
+- aucune coordonnée libre hors système de grille
+- usage systématique de `gx()` et `gy()` pour les placements
+- dessin via `draw_dots()`, `hline()`, `vline()`
+- helpers texte `text()` et `text_right()`
+
+Les helpers texte acceptent désormais un paramètre optionnel `font_name`, ce qui permet de conserver une API simple tout en autorisant des variations typographiques localisées.
+
 ---
 
 ### 4.2 pages/
@@ -141,7 +153,22 @@ Principe fondamental :
 
 ---
 
-## 5. Hyperliens PDF
+## 5. Daily page actuelle
+
+La daily page actuellement retenue suit la logique suivante :
+
+- zone **PRIORITÉS** en haut avec **4 cases**
+- colonne **TEMPS** à gauche
+- colonne **TÂCHES** à droite avec **5 cases**
+- zone **NOTES** positionnée dans la partie droite basse
+- zone **REPORT / À MIGRER** remontée dans la partie gauche basse
+- page pointillée libre en seconde page du couple daily
+
+👉 Cette structure correspond à la version ajustée après relecture visuelle et annotations sur PDF.
+
+---
+
+## 6. Hyperliens PDF
 
 Le système utilise :
 
@@ -152,7 +179,7 @@ Le système utilise :
 
 ---
 
-## 6. État actuel
+## 7. État actuel
 
 Le projet permet déjà :
 
@@ -160,10 +187,11 @@ Le projet permet déjà :
 - génération d’un mois complet
 - génération d’un carnet annuel (démo)
 - navigation interne fonctionnelle
+- daily layout mis à jour selon les derniers retours visuels
 
 ---
 
-## 7. Évolutions prévues
+## 8. Évolutions prévues
 
 - navigation vers le mois courant
 - index enrichi
@@ -172,14 +200,14 @@ Le projet permet déjà :
 
 ---
 
-## 8. Principe fondamental
+## 9. Principe fondamental
 
 👉 on ne génère pas un PDF
 👉 on construit un système
 
 ---
 
-## 9. Utilisation
+## 10. Utilisation
 
 ```bash
 pip install reportlab
@@ -194,7 +222,7 @@ output/year_demo.pdf
 
 ---
 
-## 10. Conclusion
+## 11. Conclusion
 
 Ce projet transforme le bullet journal en :
 

@@ -124,6 +124,18 @@ Contient toute la logique :
 
 👉 règle : aucun calcul graphique ailleurs
 
+### 4.1.1 Conventions graphiques et techniques
+
+Le projet repose sur des conventions stables :
+
+- toute la géométrie passe par `gx()` et `gy()`
+- la grille 5 mm est la référence unique
+- les traits passent par `hline()` et `vline()`
+- le fond pointillé passe par `draw_dots()`
+- le texte passe par `text()` et `text_right()`
+
+Les helpers texte acceptent désormais un paramètre optionnel `font_name`, afin de permettre des variations locales de police sans casser l’API commune.
+
 ---
 
 ### 4.2 Pages
@@ -158,7 +170,35 @@ Principe fondamental :
 
 ---
 
-## 5. Hyperliens PDF
+## 5. Daily page — état courant
+
+La daily actuellement retenue est la version corrigée après plusieurs itérations visuelles.
+
+### 5.1 Structure générale
+
+La page daily se compose désormais de :
+
+- une zone **PRIORITÉS** avec **4 cases**
+- une colonne **TEMPS** à gauche
+- une colonne **TÂCHES** à droite avec **5 cases**
+- une zone **NOTES** dans la partie basse droite
+- une zone **REPORT / À MIGRER** remontée dans la partie basse gauche
+- une seconde page daily laissée volontairement pointillée et libre
+
+### 5.2 Doctrine de correction visuelle
+
+Les ajustements récents ont été validés à partir d’annotations directement sur PDF.
+
+Règle d’interprétation retenue :
+
+- annotations rouges : suppression
+- annotations jaunes : ajout ou déplacement
+
+Cette convention a servi à stabiliser la mise en page actuelle de la daily.
+
+---
+
+## 6. Hyperliens PDF
 
 Le système utilise :
 
@@ -169,17 +209,19 @@ Le système utilise :
 
 ---
 
-## 6. État actuel
+## 7. État actuel
 
 Le projet permet :
 
 - génération complète du carnet (démo)
 - navigation interne
 - pages validées visuellement
+- daily layout mis à jour selon les derniers retours
+- cohérence rétablie entre layout daily et helpers texte
 
 ---
 
-## 7. Roadmap
+## 8. Roadmap
 
 ### Court terme
 
@@ -198,14 +240,14 @@ Le projet permet :
 
 ---
 
-## 8. Principe fondamental
+## 9. Principe fondamental
 
 👉 On ne génère pas un PDF  
 👉 On construit un système
 
 ---
 
-## 9. Usage
+## 10. Usage
 
 ```bash
 pip install reportlab
@@ -220,7 +262,7 @@ output/year_demo.pdf
 
 ---
 
-## 10. Conclusion
+## 11. Conclusion
 
 Ce projet transforme un bullet journal en :
 

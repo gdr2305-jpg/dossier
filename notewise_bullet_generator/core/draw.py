@@ -3,6 +3,8 @@ from .config import PAGE_WIDTH, PAGE_HEIGHT, MARGIN, GRID_STEP, DOT_RADIUS, LINE
 
 
 def draw_dots(c: Canvas) -> None:
+    c.saveState()
+    c.setFillGray(0.45)
     x = MARGIN
     while x <= PAGE_WIDTH - MARGIN + 0.1:
         y = MARGIN
@@ -10,6 +12,7 @@ def draw_dots(c: Canvas) -> None:
             c.circle(x, y, DOT_RADIUS, fill=1, stroke=0)
             y += GRID_STEP
         x += GRID_STEP
+    c.restoreState()
 
 
 def hline(c: Canvas, x1: float, y: float, x2: float) -> None:

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from reportlab.pdfgen import canvas
 
-from core.config import MARGIN, PAGE_HEIGHT, PAGE_SIZE, PAGE_WIDTH
+from core.config import MARGIN, PAGE_SIZE, PAGE_WIDTH
 from core.draw import draw_dots, hline, vline
 from core.geometry import gx, gy
 from core.grid import grid_size
@@ -47,7 +47,6 @@ def draw_header_links(c, rows: int, right_x: float | None = None) -> None:
     y = gy(rows) + 3
     x = right_x if right_x is not None else PAGE_WIDTH - MARGIN
 
-    # On dessine de droite à gauche pour garder un alignement robuste.
     for label, target in reversed(HEADER_LINKS):
         width_guess = max(26, len(label) * 4.8)
         left = x - width_guess
@@ -57,20 +56,24 @@ def draw_header_links(c, rows: int, right_x: float | None = None) -> None:
 
 
 def draw_side_tabs(c) -> None:
-    """Dessine des onglets latéraux sobres sur le côté droit."""
+    """Dessine des onglets latéraux plus discrets sur le côté droit."""
     cols, rows = grid_size()
-    tab_left = gx(cols - 2.2)
+    tab_left = gx(cols - 1.65)
     tab_right = PAGE_WIDTH
-    tab_height = gy(2.2) - gy(0)
-    top_start = gy(rows) - tab_height
-    gap = gy(0.3) - gy(0)
+    tab_height = gy(1.7) - gy(0)
+    top_start = gy(rows) - tab_height - 1
+    gap = gy(0.2) - gy(0)
 
+    c.saveState()
+    c.setLineWidth(0.5)
     for idx, (label, target) in enumerate(SIDE_TABS):
         top = top_start - idx * (tab_height + gap)
         bottom = top - tab_height
         c.rect(tab_left, bottom, tab_right - tab_left, tab_height, stroke=1, fill=0)
-        text(c, tab_left + 3, bottom + tab_height / 2 - 3, label)
+        c.setFont("Helvetica", 6)
+        c.drawString(tab_left + 2, bottom + tab_height / 2 - 2, label)
         c.linkRect("", target, (tab_left, bottom, tab_right, top), relative=0, thickness=0)
+    c.restoreState()
 
 
 def draw_page_number(c, page_number: int) -> None:
@@ -206,30 +209,30 @@ def render_daily(
 ) -> None:
     cols, rows = grid_size()
 
-    # page 1
     if page1_bookmark:
         c.bookmarkPage(page1_bookmark)
     draw_dots(c)
     draw_side_tabs(c)
 
     top = rows
-    date_value = date_label if date_label is not None else "____________________"
-    day_value = day_label if day_label is not None else "____________________"
+    date_value = date_label if date_label is not None else ""
+    day_value = day_label if day_label is not None else ""
     text(c, gx(0), gy(top) + 3, f"Date : {date_value}")
-    text(c, gx(10), gy(top) + 3, "Page : ____")
+    text(c, gx(10), gy(top) + 3, "Page :")
     text(c, gx(0), gy(top - 2) + 3, f"Jour : {day_value}")
-    draw_header_links(c, rows)
 
     prio_top = top - 4
-    prio_bottom = prio_top - 6
+    priority_rows = [prio_top - 2, prio_top - 4, prio_top - 6, prio_top - 8]
+    prio_bottom_line = prio_top - 10
     hline(c, gx(0), gy(prio_top), gx(cols))
     text(c, gx(0), gy(prio_top) + 3, "PRIORITÉS")
 
-    for r in [prio_top - 2, prio_top - 4]:
+    for r in priority_rows:
         c.rect(gx(0), gy(r) - 4, 10, 10)
         hline(c, gx(2), gy(r), gx(cols))
+    hline(c, gx(0), gy(prio_bottom_line), gx(cols))
 
-    sep_row = prio_bottom - 2
+    sep_row = prio_bottom_line - 2
     mid_col = 11
     hline(c, gx(0), gy(sep_row), gx(cols))
     text(c, gx(0), gy(sep_row) + 3, "TEMPS")
@@ -244,7 +247,7 @@ def render_daily(
         text(c, gx(0), gy(r) - 3, f"{h:02d}h")
         hline(c, gx(3), gy(r), gx(mid_col - 1))
 
-    task_rows = [sep_row - 2, sep_row - 6, sep_row - 10, sep_row - 14]
+    task_rows = [sep_row - 2, sep_row - 5, sep_row - 8, sep_row - 11, sep_row - 14, sep_row - 17, sep_row - 20]
     for r in task_rows:
         c.rect(gx(mid_col + 2), gy(r) - 4, 10, 10)
         hline(c, gx(mid_col + 4), gy(r), gx(cols))
@@ -259,17 +262,15 @@ def render_daily(
     text(c, gx(0), gy(report_row) + 3, "REPORT / À MIGRER")
 
     text(c, gx(0), gy(1), "INDEXER ? [ ] oui")
-    text(c, gx(8), gy(1), "Entrée index : ____________________")
+    text(c, gx(8), gy(1), "Entrée index :")
     draw_page_number(c, page_number_1)
 
     c.showPage()
 
-    # page 2
     if page2_bookmark:
         c.bookmarkPage(page2_bookmark)
     draw_dots(c)
     draw_side_tabs(c)
-    draw_header_links(c, rows)
     draw_page_number(c, page_number_2)
 
 
@@ -313,7 +314,6 @@ def build(
     c = canvas.Canvas(str(output_path), pagesize=PAGE_SIZE)
     page_number = 1
 
-    # ---- Pages fixes ----
     render_simple_index_page(c, page_number, "INDEX")
     c.showPage()
     page_number += 1
@@ -334,7 +334,6 @@ def build(
     c.showPage()
     page_number += 1
 
-    # ---- 12 mois ----
     month_day_counts = month_day_counts_for_year(year)
     for idx, (month_name, month_day_count) in enumerate(zip(MONTH_NAMES, month_day_counts), start=1):
         bookmark_left = f"MONTH_{idx:02d}_L"
@@ -363,7 +362,6 @@ def build(
         c.showPage()
         page_number += 1
 
-    # ---- Collections fixes ----
     collections = [
         ("Parking", "PARKING"),
         ("Achats", "ACHATS"),
@@ -378,7 +376,6 @@ def build(
         c.showPage()
         page_number += 1
 
-    # ---- Section libre ----
     for free_idx in range(free_pages_count):
         render_simple_notes_page(
             c,
@@ -389,7 +386,6 @@ def build(
         c.showPage()
         page_number += 1
 
-    # ---- Dailies de test ----
     for i, (date_label, day_label) in enumerate(iter_daily_labels(year, daily_count), start=1):
         render_daily(
             c,

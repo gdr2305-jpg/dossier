@@ -35,6 +35,12 @@ FREE_PAGES_COUNT = 6
 DEFAULT_TEST_DAILY_COUNT = 14
 TITLE_COLOR = (0.18, 0.24, 0.42)
 MONTH_TITLE_COLOR = (0.24, 0.18, 0.38)
+SECTION_TITLE_COLORS = {
+    "Parking": (0.34, 0.25, 0.18),
+    "Achats": (0.14, 0.35, 0.32),
+    "Grandes idées": (0.28, 0.17, 0.34),
+    "Prières": (0.34, 0.20, 0.20),
+}
 
 
 def content_right_x() -> float:
@@ -48,6 +54,20 @@ def draw_title(c, y: float, value: str, size: int = 20, color: tuple[float, floa
     c.setFont("Times-BoldItalic", size)
     c.drawCentredString(PAGE_WIDTH / 2, y, value)
     c.restoreState()
+
+
+def draw_section_title(c, y: float, value: str) -> None:
+    base_value = value
+    if value.startswith("Prières"):
+        base_value = "Prières"
+    elif value.startswith("Parking"):
+        base_value = "Parking"
+    elif value.startswith("Achats"):
+        base_value = "Achats"
+    elif value.startswith("Grandes idées"):
+        base_value = "Grandes idées"
+    color = SECTION_TITLE_COLORS.get(base_value, TITLE_COLOR)
+    draw_title(c, y, value, size=18, color=color)
 
 
 def draw_header_links(c, rows: int, right_x: float | None = None) -> None:
@@ -109,7 +129,7 @@ def add_index_entry(c, label: str, row: int, target: str, page_number: int) -> N
     right = content_right_x() - 4
     text(c, left, y, label, size=10)
     text_right(c, right, y, str(page_number), size=10, font_name="Helvetica-Bold")
-    hline(c, left, y - 3, right,)
+    hline(c, left, y - 3, right)
     c.linkRect("", target, (left, y - 6, right, y + 10), relative=0, thickness=0)
 
 
@@ -176,7 +196,10 @@ def render_simple_notes_page(c, page_number: int, header_left: str, bookmark: st
         c.bookmarkPage(bookmark)
     draw_dots(c)
     draw_side_tabs(c)
-    text(c, gx(0), gy(rows) + 3, header_left)
+    if header_left.startswith(("Parking", "Achats", "Grandes idées", "Prières")):
+        draw_section_title(c, gy(rows) + 2, header_left)
+    else:
+        text(c, gx(0), gy(rows) + 3, header_left)
     draw_page_number(c, page_number)
 
 
@@ -241,7 +264,7 @@ def render_daily(
     date_label: str | None = None,
     day_label: str | None = None,
 ) -> None:
-    cols, rows = grid_size()
+    rows = grid_size()[1]
     right_x = content_right_x()
 
     if page1_bookmark:
@@ -252,8 +275,8 @@ def render_daily(
     top = rows
     date_value = date_label if date_label is not None else ""
     day_value = day_label if day_label is not None else ""
-    text(c, gx(0), gy(top) + 3, f"Date : {date_value}")
-    text(c, gx(0), gy(top - 2) + 3, f"Jour : {day_value}")
+    text(c, gx(0), gy(top) + 3, f"Date : {date_value}", size=11, font_name="Helvetica-Bold")
+    text(c, gx(0), gy(top - 2) + 3, f"Jour : {day_value}", size=11, font_name="Helvetica-Bold")
 
     prio_top = top - 4
     priority_rows = [prio_top - 2, prio_top - 4, prio_top - 6]
@@ -353,7 +376,7 @@ def compute_page_map(daily_count: int, free_pages_count: int) -> dict[str, int]:
         page += 1
 
     page_map["PARKING"] = page
-    page += 1
+    page += 2
     page_map["ACHATS"] = page
     page += 1
     page_map["IDEAS"] = page
@@ -436,6 +459,7 @@ def build(
 
     collections = [
         ("Parking", "PARKING"),
+        ("Parking — suite", None),
         ("Achats", "ACHATS"),
         ("Grandes idées", "IDEAS"),
         ("Prières 1", "PRAYERS"),

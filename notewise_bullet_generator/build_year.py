@@ -242,9 +242,9 @@ def render_daily(c, page_number_1: int, page_number_2: int, page1_bookmark: str 
     text(c, gx(0), gy(top) + 3, f"Date : {date_value}", size=11, font_name="Helvetica-Bold")
     text(c, gx(0), gy(top - 2) + 3, f"Jour : {day_value}", size=11, font_name="Helvetica-Bold")
     prio_top = top - 4
-    priority_line_rows = [prio_top - 2, prio_top - 4, prio_top - 6]
+    priority_line_rows = [prio_top - 1, prio_top - 3, prio_top - 5, prio_top - 7]
     priority_box_rows = [r - 1 for r in priority_line_rows]
-    prio_bottom_line = prio_top - 8
+    prio_bottom_line = prio_top - 9
     hline(c, gx(0), gy(prio_top), right_x)
     text(c, gx(0), gy(prio_top) + 3, "PRIORITÉS")
     for line_r, box_r in zip(priority_line_rows, priority_box_rows):
@@ -258,7 +258,6 @@ def render_daily(c, page_number_1: int, page_number_2: int, page1_bookmark: str 
     text(c, gx(mid_col + 1), gy(sep_row) + 3, "TÂCHES")
     time_hours = list(range(8, 23))
     time_start_row = sep_row - 2
-    last_time_row = time_start_row - (len(time_hours) - 1)
     for i, h in enumerate(time_hours):
         r = time_start_row - i
         text(c, gx(0), gy(r) - 3, f"{h:02d}h")
@@ -269,14 +268,16 @@ def render_daily(c, page_number_1: int, page_number_2: int, page1_bookmark: str 
         c.rect(gx(mid_col + 2.1), gy(box_r) - 4, 10, 10)
         hline(c, gx(mid_col + 4.1), gy(line_r), right_x)
 
-    notes_top = last_time_row - 2
-    report_row = notes_top - 3
+    notes_divider_row = task_line_rows[-1] - 3
+    notes_label_row = notes_divider_row + 1
+    report_label_row = notes_divider_row - 5
+    bottom_split_row = 2
 
-    vline(c, gx(mid_col), gy(sep_row), gy(report_row))
-    hline(c, gx(mid_col), gy(notes_top), right_x)
+    vline(c, gx(mid_col), gy(sep_row), gy(bottom_split_row))
+    hline(c, gx(mid_col), gy(notes_divider_row), right_x)
 
-    text(c, gx(mid_col + 1), gy(notes_top) + 3, "NOTES")
-    text(c, gx(0), gy(report_row) + 3, "REPORT / À MIGRER")
+    text(c, gx(mid_col + 1), gy(notes_label_row) + 3, "NOTES")
+    text(c, gx(0), gy(report_label_row) + 3, "REPORT / À MIGRER")
     text(c, gx(0), gy(1), "INDEXER ? [ ] oui")
     text(c, gx(8), gy(1), "Entrée index :")
     draw_page_number(c, page_number_1)

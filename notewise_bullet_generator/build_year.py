@@ -304,10 +304,11 @@ def render_daily(
         text(c, gx(0), gy(r) - 3, f"{h:02d}h")
         hline(c, gx(2.2), gy(r), gx(mid_col - 1))
 
-    task_rows = [sep_row - 2, sep_row - 4, sep_row - 6, sep_row - 8, sep_row - 10, sep_row - 12]
-    for r in task_rows:
-        c.rect(gx(mid_col + 2.1), gy(r) - 4, 10, 10)
-        hline(c, gx(mid_col + 4.1), gy(r), right_x)
+    task_line_rows = [sep_row - 2, sep_row - 4, sep_row - 6, sep_row - 8, sep_row - 10, sep_row - 12]
+    task_box_rows = [r - 1 for r in task_line_rows]
+    for line_r, box_r in zip(task_line_rows, task_box_rows):
+        c.rect(gx(mid_col + 2.1), gy(box_r) - 4, 10, 10)
+        hline(c, gx(mid_col + 4.1), gy(line_r), right_x)
 
     notes_top = last_time_row - 2
     vline(c, gx(mid_col), gy(sep_row), gy(notes_top))

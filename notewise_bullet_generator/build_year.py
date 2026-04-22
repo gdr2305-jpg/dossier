@@ -136,12 +136,10 @@ def add_index_entry(c, label: str, row: int, target: str, page_number: int) -> N
 def render_simple_index_page(c, page_number: int, page_map: dict[str, int], title: str = "INDEX") -> None:
     _, rows = grid_size()
     c.bookmarkPage("INDEX")
-
     draw_dots(c)
     draw_side_tabs(c)
     draw_title(c, gy(rows) + 2, title, size=22)
     text(c, gx(2), gy(rows - 2) + 2, "Navigation générale", size=9, font_name="Helvetica-Oblique")
-
     lines = [
         ("Année / Semestres", "SEM1"),
         ("Mois", "MONTHS"),
@@ -154,23 +152,19 @@ def render_simple_index_page(c, page_number: int, page_map: dict[str, int], titl
     start_row = rows - 5
     for i, (value, target) in enumerate(lines):
         add_index_entry(c, value, start_row - 3 * i, target, page_map[target])
-
     draw_page_number(c, page_number)
 
 
 def render_months_index_page(c, page_number: int, page_map: dict[str, int], year: int | None = None) -> None:
     _, rows = grid_size()
     c.bookmarkPage("MONTHS")
-
     draw_dots(c)
     draw_side_tabs(c)
     draw_title(c, gy(rows) + 2, "MOIS", size=20)
-
     left_x = gx(1)
     right_x = gx(10)
     start_y = gy(rows - 4)
     block_gap = gy(5) - gy(0)
-
     for idx, month_name in enumerate(MONTH_NAMES[:6], start=1):
         y = start_y - (idx - 1) * block_gap
         text(c, left_x, y, month_name, size=10, font_name="Helvetica-Bold")
@@ -178,7 +172,6 @@ def render_months_index_page(c, page_number: int, page_map: dict[str, int], year
         if year is not None:
             draw_month_mini_calendar(c, left_x, y - 10, year, idx)
         c.linkRect("", f"MONTH_{idx:02d}_L", (left_x, y - 38, gx(8.5), y + 10), relative=0, thickness=0)
-
     for idx, month_name in enumerate(MONTH_NAMES[6:], start=7):
         y = start_y - (idx - 7) * block_gap
         text(c, right_x, y, month_name, size=10, font_name="Helvetica-Bold")
@@ -186,7 +179,6 @@ def render_months_index_page(c, page_number: int, page_map: dict[str, int], year
         if year is not None:
             draw_month_mini_calendar(c, right_x, y - 10, year, idx)
         c.linkRect("", f"MONTH_{idx:02d}_L", (right_x, y - 38, gx(17.5), y + 10), relative=0, thickness=0)
-
     draw_page_number(c, page_number)
 
 
@@ -203,45 +195,28 @@ def render_simple_notes_page(c, page_number: int, header_left: str, bookmark: st
     draw_page_number(c, page_number)
 
 
-def render_month_page(
-    c,
-    page_number: int,
-    month_name: str,
-    month_index: int,
-    start_day: int,
-    day_count: int,
-    year: int | None = None,
-    bookmark: str | None = None,
-) -> None:
+def render_month_page(c, page_number: int, month_name: str, month_index: int, start_day: int, day_count: int, year: int | None = None, bookmark: str | None = None) -> None:
     cols, rows = grid_size()
     if bookmark:
         c.bookmarkPage(bookmark)
-
     draw_dots(c)
-    draw_side_tabs(c)
-
     c.saveState()
     c.setFillColorRGB(*MONTH_TITLE_COLOR)
     c.setFont("Times-BoldItalic", 18)
     c.drawString(gx(0), gy(rows) + 2, f"Mois de : {month_name}")
     c.restoreState()
-    draw_header_links(c, rows)
-
+    draw_header_links(c, rows, right_x=PAGE_WIDTH - MARGIN)
     top_content_row = rows - 2
-    right_x = content_right_x()
+    right_x = PAGE_WIDTH - MARGIN
     bottom_boundary_row = top_content_row - day_count * 2
-
     for k in range(day_count + 1):
         r = top_content_row - 2 * k
         hline(c, gx(0), gy(r), right_x)
-
     hour_cols = [2 + i * 3 for i in range(7)]
     hours = ["8h", "10h", "12h", "14h", "16h", "18h", "20h"]
-
     for col, hour in zip(hour_cols, hours):
         vline(c, gx(col), gy(bottom_boundary_row), gy(top_content_row))
         text(c, gx(col) - 6, gy(top_content_row) + 6, hour)
-
     for i in range(day_count):
         day_number = start_day + i
         number_row = top_content_row - 1 - 2 * i
@@ -251,79 +226,58 @@ def render_month_page(
             text(c, gx(0.8), gy(number_row) - 3, initial, size=8, font_name="Helvetica-Oblique")
         else:
             text(c, gx(0), gy(number_row) - 3, str(day_number), size=8)
-
     draw_page_number(c, page_number)
 
 
-def render_daily(
-    c,
-    page_number_1: int,
-    page_number_2: int,
-    page1_bookmark: str | None = None,
-    page2_bookmark: str | None = None,
-    date_label: str | None = None,
-    day_label: str | None = None,
-) -> None:
+def render_daily(c, page_number_1: int, page_number_2: int, page1_bookmark: str | None = None, page2_bookmark: str | None = None, date_label: str | None = None, day_label: str | None = None) -> None:
     rows = grid_size()[1]
     right_x = content_right_x()
-
     if page1_bookmark:
         c.bookmarkPage(page1_bookmark)
     draw_dots(c)
     draw_side_tabs(c)
-
     top = rows
     date_value = date_label if date_label is not None else ""
     day_value = day_label if day_label is not None else ""
     text(c, gx(0), gy(top) + 3, f"Date : {date_value}", size=11, font_name="Helvetica-Bold")
     text(c, gx(0), gy(top - 2) + 3, f"Jour : {day_value}", size=11, font_name="Helvetica-Bold")
-
     prio_top = top - 4
-    priority_rows = [prio_top - 2, prio_top - 4, prio_top - 6]
+    priority_line_rows = [prio_top - 2, prio_top - 4, prio_top - 6]
+    priority_box_rows = [r - 1 for r in priority_line_rows]
     prio_bottom_line = prio_top - 8
     hline(c, gx(0), gy(prio_top), right_x)
     text(c, gx(0), gy(prio_top) + 3, "PRIORITÉS")
-
-    for r in priority_rows:
-        c.rect(gx(0.1), gy(r) - 4, 10, 10)
-        hline(c, gx(1.8), gy(r), right_x)
+    for line_r, box_r in zip(priority_line_rows, priority_box_rows):
+        c.rect(gx(0.1), gy(box_r) - 4, 10, 10)
+        hline(c, gx(1.8), gy(line_r), right_x)
     hline(c, gx(0), gy(prio_bottom_line), right_x)
-
     sep_row = prio_bottom_line - 2
     mid_col = 11
     hline(c, gx(0), gy(sep_row), right_x)
     text(c, gx(0), gy(sep_row) + 3, "TEMPS")
     text(c, gx(mid_col + 1), gy(sep_row) + 3, "TÂCHES")
-
     time_hours = list(range(8, 23))
     time_start_row = sep_row - 2
     last_time_row = time_start_row - (len(time_hours) - 1)
-
     for i, h in enumerate(time_hours):
         r = time_start_row - i
         text(c, gx(0), gy(r) - 3, f"{h:02d}h")
         hline(c, gx(2.2), gy(r), gx(mid_col - 1))
-
     task_line_rows = [sep_row - 2, sep_row - 4, sep_row - 6, sep_row - 8, sep_row - 10, sep_row - 12]
     task_box_rows = [r - 1 for r in task_line_rows]
     for line_r, box_r in zip(task_line_rows, task_box_rows):
         c.rect(gx(mid_col + 2.1), gy(box_r) - 4, 10, 10)
         hline(c, gx(mid_col + 4.1), gy(line_r), right_x)
-
     notes_top = last_time_row - 2
     vline(c, gx(mid_col), gy(sep_row), gy(notes_top))
     hline(c, gx(0), gy(notes_top), right_x)
     text(c, gx(0), gy(notes_top) + 3, "NOTES")
-
     report_row = notes_top - 3
     text(c, gx(0), gy(report_row) + 3, "REPORT / À MIGRER")
-
     text(c, gx(0), gy(1), "INDEXER ? [ ] oui")
     text(c, gx(8), gy(1), "Entrée index :")
     draw_page_number(c, page_number_1)
-
     c.showPage()
-
     if page2_bookmark:
         c.bookmarkPage(page2_bookmark)
     draw_dots(c)
@@ -348,7 +302,6 @@ def iter_daily_labels(year: int | None, daily_count: int):
         for _ in range(daily_count):
             yield None, None
         return
-
     current_date = date(year, 1, 1)
     end_date = date(year, 12, 31)
     produced = 0
@@ -369,13 +322,11 @@ def compute_page_map(daily_count: int, free_pages_count: int) -> dict[str, int]:
     page += 1
     page_map["MONTHS"] = page
     page += 1
-
     for month_idx in range(1, 13):
         page_map[f"MONTH_{month_idx:02d}_L"] = page
         page += 1
         page_map[f"MONTH_{month_idx:02d}_R"] = page
         page += 1
-
     page_map["PARKING"] = page
     page += 2
     page_map["ACHATS"] = page
@@ -386,125 +337,50 @@ def compute_page_map(daily_count: int, free_pages_count: int) -> dict[str, int]:
     page += 4
     page_map["LIBRE"] = page
     page += free_pages_count
-
     for daily_idx in range(1, daily_count + 1):
         page_map[f"DAILY_{daily_idx:03d}_A"] = page
         page += 1
         page_map[f"DAILY_{daily_idx:03d}_B"] = page
         page += 1
-
     return page_map
 
 
-def build(
-    output_path: str | Path,
-    daily_count: int = DEFAULT_TEST_DAILY_COUNT,
-    year: int | None = None,
-    free_pages_count: int = FREE_PAGES_COUNT,
-) -> None:
+def build(output_path: str | Path, daily_count: int = DEFAULT_TEST_DAILY_COUNT, year: int | None = None, free_pages_count: int = FREE_PAGES_COUNT) -> None:
     c = canvas.Canvas(str(output_path), pagesize=PAGE_SIZE)
     page_number = 1
     page_map = compute_page_map(daily_count, free_pages_count)
-
     render_simple_index_page(c, page_number, page_map, "INDEX")
-    c.showPage()
-    page_number += 1
-
+    c.showPage(); page_number += 1
     render_simple_notes_page(c, page_number, "Abréviations / Conventions")
-    c.showPage()
-    page_number += 1
-
+    c.showPage(); page_number += 1
     render_simple_notes_page(c, page_number, "Semestre 1", bookmark="SEM1")
-    c.showPage()
-    page_number += 1
-
+    c.showPage(); page_number += 1
     render_simple_notes_page(c, page_number, "Semestre 2", bookmark="SEM2")
-    c.showPage()
-    page_number += 1
-
+    c.showPage(); page_number += 1
     render_months_index_page(c, page_number, page_map, year=year)
-    c.showPage()
-    page_number += 1
-
+    c.showPage(); page_number += 1
     month_day_counts = month_day_counts_for_year(year)
     for idx, (month_name, month_day_count) in enumerate(zip(MONTH_NAMES, month_day_counts), start=1):
-        bookmark_left = f"MONTH_{idx:02d}_L"
-        bookmark_right = f"MONTH_{idx:02d}_R"
-        left_days, right_days = split_month_day_count(month_day_count)
-
-        render_month_page(
-            c,
-            page_number,
-            month_name,
-            idx,
-            start_day=1,
-            day_count=left_days,
-            year=year,
-            bookmark=bookmark_left,
-        )
-        c.showPage()
-        page_number += 1
-
-        render_month_page(
-            c,
-            page_number,
-            month_name,
-            idx,
-            start_day=left_days + 1,
-            day_count=right_days,
-            year=year,
-            bookmark=bookmark_right,
-        )
-        c.showPage()
-        page_number += 1
-
-    collections = [
-        ("Parking", "PARKING"),
-        ("Parking — suite", None),
-        ("Achats", "ACHATS"),
-        ("Grandes idées", "IDEAS"),
-        ("Prières 1", "PRAYERS"),
-        ("Prières 2", None),
-        ("Prières 3", None),
-        ("Prières 4", None),
-    ]
+        bookmark_left = f"MONTH_{idx:02d}_L"; bookmark_right = f"MONTH_{idx:02d}_R"; left_days, right_days = split_month_day_count(month_day_count)
+        render_month_page(c, page_number, month_name, idx, start_day=1, day_count=left_days, year=year, bookmark=bookmark_left)
+        c.showPage(); page_number += 1
+        render_month_page(c, page_number, month_name, idx, start_day=left_days + 1, day_count=right_days, year=year, bookmark=bookmark_right)
+        c.showPage(); page_number += 1
+    collections = [("Parking", "PARKING"), ("Parking — suite", None), ("Achats", "ACHATS"), ("Grandes idées", "IDEAS"), ("Prières 1", "PRAYERS"), ("Prières 2", None), ("Prières 3", None), ("Prières 4", None)]
     for name, bookmark in collections:
         render_simple_notes_page(c, page_number, name, bookmark=bookmark)
-        c.showPage()
-        page_number += 1
-
+        c.showPage(); page_number += 1
     for free_idx in range(free_pages_count):
-        render_simple_notes_page(
-            c,
-            page_number,
-            f"Libre {free_idx + 1}",
-            bookmark="LIBRE" if free_idx == 0 else None,
-        )
-        c.showPage()
-        page_number += 1
-
+        render_simple_notes_page(c, page_number, f"Libre {free_idx + 1}", bookmark="LIBRE" if free_idx == 0 else None)
+        c.showPage(); page_number += 1
     for i, (date_label, day_label) in enumerate(iter_daily_labels(year, daily_count), start=1):
-        render_daily(
-            c,
-            page_number,
-            page_number + 1,
-            page1_bookmark=f"DAILY_{i:03d}_A",
-            page2_bookmark=f"DAILY_{i:03d}_B",
-            date_label=date_label,
-            day_label=day_label,
-        )
-        c.showPage()
-        page_number += 2
-
+        render_daily(c, page_number, page_number + 1, page1_bookmark=f"DAILY_{i:03d}_A", page2_bookmark=f"DAILY_{i:03d}_B", date_label=date_label, day_label=day_label)
+        c.showPage(); page_number += 2
     c.save()
 
 
 if __name__ == "__main__":
     output = Path("output")
     output.mkdir(exist_ok=True)
-
     build(output / "year_generic_test.pdf", daily_count=DEFAULT_TEST_DAILY_COUNT, year=None)
     build(output / "year_2026_test.pdf", daily_count=DEFAULT_TEST_DAILY_COUNT, year=2026)
-
-    print("PDF générique de test généré dans ./output/year_generic_test.pdf")
-    print("PDF 2026 de test généré dans ./output/year_2026_test.pdf")

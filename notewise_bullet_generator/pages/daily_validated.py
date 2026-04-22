@@ -44,18 +44,19 @@ def build(output_path: str | Path) -> None:
         text(c, gx(0), gy(r) - 3, f"{h:02d}h")
         hline(c, gx(3), gy(r), gx(mid_col - 1))
 
-    task_rows = [sep_row - 2, sep_row - 6, sep_row - 10, sep_row - 14]
-    for r in task_rows:
-        c.rect(gx(mid_col + 2), gy(r) - 4, 10, 10)
-        hline(c, gx(mid_col + 4), gy(r), gx(cols))
+    task_line_rows = [sep_row - 1, sep_row - 3, sep_row - 5, sep_row - 7, sep_row - 9]
+    task_box_rows = [r - 1 for r in task_line_rows]
+    for line_r, box_r in zip(task_line_rows, task_box_rows):
+        c.rect(gx(mid_col + 2), gy(box_r) - 4, 10, 10)
+        hline(c, gx(mid_col + 4), gy(line_r), gx(cols))
 
     notes_top = last_time_row - 2
-    vline(c, gx(mid_col), gy(sep_row), gy(notes_top))
-    hline(c, gx(0), gy(notes_top), gx(cols))
-    text(c, gx(0), gy(notes_top) + 3, "NOTES")
-
     report_row = notes_top - 3
-    hline(c, gx(0), gy(report_row), gx(cols))
+
+    vline(c, gx(mid_col), gy(sep_row), gy(report_row))
+    hline(c, gx(mid_col), gy(notes_top), gx(cols))
+
+    text(c, gx(mid_col + 1), gy(notes_top) + 3, "NOTES")
     text(c, gx(0), gy(report_row) + 3, "REPORT / À MIGRER")
 
     text(c, gx(0), gy(1), "INDEXER ? [ ] oui")

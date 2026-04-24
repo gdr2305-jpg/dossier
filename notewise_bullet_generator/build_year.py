@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from reportlab.lib.colors import Color
+from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from core.config import MARGIN, PAGE_SIZE, PAGE_WIDTH

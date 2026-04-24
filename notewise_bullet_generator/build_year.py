@@ -43,6 +43,7 @@ DAYS_TITLE_COLOR = (0.30, 0.40, 0.50)
 DAYS_HEADER_FILL = Color(0.87, 0.91, 0.94)
 DAYS_PANEL_FILL = Color(0.96, 0.97, 0.98)
 DAYS_WEEKDAY_FILL = Color(0.93, 0.95, 0.97)
+DAYS_WEEKEND_FILL = Color(0.90, 0.90, 0.90)
 DAYS_BORDER_COLOR = Color(0.55, 0.63, 0.70)
 SECTION_TITLE_COLORS = {
     "Parking": (0.34, 0.25, 0.18),
@@ -290,6 +291,9 @@ def render_days_quarter_page(
                 x = cell_left + day_idx * cell_width
                 y = cell_top - (week_idx + 1) * cell_height
                 c.saveState()
+                if day_idx >= 5:
+                    c.setFillColor(DAYS_WEEKEND_FILL)
+                    c.rect(x, y, cell_width, cell_height, stroke=0, fill=1)
                 c.setStrokeColor(DAYS_BORDER_COLOR)
                 c.rect(x, y, cell_width, cell_height, stroke=1, fill=0)
                 c.restoreState()

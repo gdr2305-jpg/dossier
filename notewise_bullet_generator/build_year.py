@@ -261,7 +261,7 @@ def render_days_quarter_page(
         c.bookmarkPage("DAYS")
     draw_dots(c)
     draw_side_tabs(c, active_target="DAYS")
-    draw_title(c, gy(rows) + 2, "JOURS", size=21, color=DAYS_TITLE_COLOR.rgb())
+    draw_title(c, gy(rows) + 2, "JOURS", size=21, color=DAYS_TITLE_COLOR)
     text(c, gx(1), gy(rows - 1.7) + 2, subtitle, size=9, font_name="Helvetica-Oblique")
 
     if year is None:

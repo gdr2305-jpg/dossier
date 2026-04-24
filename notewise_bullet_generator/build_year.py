@@ -4,6 +4,7 @@ from calendar import monthcalendar, monthrange
 from datetime import date, timedelta
 from pathlib import Path
 
+from reportlab.lib.colors import Color
 from reportlab.pdfgen import canvas
 
 from core.config import MARGIN, PAGE_SIZE, PAGE_WIDTH
@@ -22,10 +23,12 @@ DAY_NAMES = [
 ]
 
 DAY_INITIALS = ["L", "M", "M", "J", "V", "S", "D"]
+DAY_SHORT_NAMES = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
 
 SIDE_TABS = [
     ("INDEX", "INDEX"),
     ("MOIS", "MONTHS"),
+    ("JOURS", "DAYS"),
     ("PARKING", "PARKING"),
     ("PRIÈRES", "PRAYERS"),
     ("LIBRE", "LIBRE"),
@@ -35,12 +38,25 @@ FREE_PAGES_COUNT = 6
 DEFAULT_TEST_DAILY_COUNT = 14
 TITLE_COLOR = (0.18, 0.24, 0.42)
 MONTH_TITLE_COLOR = (0.24, 0.18, 0.38)
+DAYS_TITLE_COLOR = (0.30, 0.40, 0.50)
+DAYS_HEADER_FILL = Color(0.87, 0.91, 0.94)
+DAYS_PANEL_FILL = Color(0.96, 0.97, 0.98)
+DAYS_WEEKDAY_FILL = Color(0.93, 0.95, 0.97)
+DAYS_BORDER_COLOR = Color(0.55, 0.63, 0.70)
 SECTION_TITLE_COLORS = {
     "Parking": (0.34, 0.25, 0.18),
     "Achats": (0.14, 0.35, 0.32),
     "Grandes idées": (0.28, 0.17, 0.34),
     "Prières": (0.34, 0.20, 0.20),
 }
+
+
+QUARTERS = [
+    ("JOURS_T1", [1, 2, 3], "Janvier à Mars"),
+    ("JOURS_T2", [4, 5, 6], "Avril à Juin"),
+    ("JOURS_T3", [7, 8, 9], "Juillet à Septembre"),
+    ("JOURS_T4", [10, 11, 12], "Octobre à Décembre"),
+]
 
 
 def content_right_x() -> float:
@@ -143,6 +159,7 @@ def render_simple_index_page(c, page_number: int, page_map: dict[str, int], titl
     lines = [
         ("Année / Semestres", "SEM1"),
         ("Mois", "MONTHS"),
+        ("Jours", "DAYS"),
         ("Parking", "PARKING"),
         ("Achats", "ACHATS"),
         ("Grandes idées", "IDEAS"),
@@ -192,6 +209,106 @@ def render_simple_notes_page(c, page_number: int, header_left: str, bookmark: st
         draw_section_title(c, gy(rows) + 2, header_left)
     else:
         text(c, gx(0), gy(rows) + 3, header_left)
+    draw_page_number(c, page_number)
+
+
+def daily_bookmark_for_date(current_date: date, daily_count: int) -> str | None:
+    day_of_year = current_date.timetuple().tm_yday
+    if day_of_year > daily_count:
+        return None
+    return f"DAILY_{day_of_year:03d}_A"
+
+
+def render_days_quarter_page(
+    c,
+    page_number: int,
+    page_map: dict[str, int],
+    daily_count: int,
+    year: int | None,
+    months: list[int],
+    bookmark: str,
+    subtitle: str,
+) -> None:
+    _, rows = grid_size()
+    c.bookmarkPage(bookmark)
+    if bookmark == "JOURS_T1":
+        c.bookmarkPage("DAYS")
+    draw_dots(c)
+    draw_side_tabs(c)
+    draw_title(c, gy(rows) + 2, "JOURS", size=21, color=DAYS_TITLE_COLOR.rgb())
+    text(c, gx(1), gy(rows - 1.7) + 2, subtitle, size=9, font_name="Helvetica-Oblique")
+
+    if year is None:
+        text(c, gx(1), gy(rows - 5), "Les pages JOURS nécessitent une année renseignée.", size=10)
+        draw_page_number(c, page_number)
+        return
+
+    panel_left = gx(0.8)
+    panel_width = content_right_x() - panel_left
+    panel_height = 56 * mm
+    top_y = gy(rows - 3.1)
+    header_height = 8 * mm
+    weekday_height = 6 * mm
+    calendar_bottom_margin = 2.5 * mm
+
+    for idx, month in enumerate(months):
+        panel_top = top_y - idx * (panel_height + 4 * mm)
+        panel_bottom = panel_top - panel_height
+
+        c.saveState()
+        c.setFillColor(DAYS_PANEL_FILL)
+        c.setStrokeColor(DAYS_BORDER_COLOR)
+        c.roundRect(panel_left, panel_bottom, panel_width, panel_height, 4 * mm, stroke=1, fill=1)
+        c.setFillColor(DAYS_HEADER_FILL)
+        c.roundRect(panel_left, panel_top - header_height, panel_width, header_height, 4 * mm, stroke=0, fill=1)
+        c.restoreState()
+
+        text(c, panel_left + 4 * mm, panel_top - 5.4 * mm, MONTH_NAMES[month - 1], size=11, font_name="Helvetica-Bold")
+        text_right(c, panel_left + panel_width - 4 * mm, panel_top - 5.4 * mm, str(year), size=8, font_name="Helvetica")
+
+        weeks = monthcalendar(year, month)
+        cell_left = panel_left + 3 * mm
+        cell_right = panel_left + panel_width - 3 * mm
+        cell_top = panel_top - header_height - weekday_height
+        cell_bottom = panel_bottom + calendar_bottom_margin
+        cell_width = (cell_right - cell_left) / 7
+        cell_height = (cell_top - cell_bottom) / len(weeks)
+
+        c.saveState()
+        c.setFillColor(DAYS_WEEKDAY_FILL)
+        c.rect(cell_left, panel_top - header_height - weekday_height, cell_right - cell_left, weekday_height, stroke=0, fill=1)
+        c.restoreState()
+
+        for day_idx, short_name in enumerate(DAY_SHORT_NAMES):
+            x_center = cell_left + day_idx * cell_width + cell_width / 2
+            c.setFont("Helvetica", 6)
+            c.drawCentredString(x_center, panel_top - header_height - 4.3 * mm, short_name)
+
+        for week_idx, week in enumerate(weeks):
+            for day_idx, day_number in enumerate(week):
+                x = cell_left + day_idx * cell_width
+                y = cell_top - (week_idx + 1) * cell_height
+                c.saveState()
+                c.setStrokeColor(DAYS_BORDER_COLOR)
+                c.rect(x, y, cell_width, cell_height, stroke=1, fill=0)
+                c.restoreState()
+                if not day_number:
+                    continue
+                current_date = date(year, month, day_number)
+                bookmark_target = daily_bookmark_for_date(current_date, daily_count)
+                day_label = DAY_SHORT_NAMES[current_date.weekday()]
+                text(c, x + 1.3 * mm, y + cell_height - 5 * mm, f"{day_number:02d}", size=8, font_name="Helvetica-Bold")
+                text(c, x + cell_width - 1.2 * mm - 10, y + 2.2 * mm, day_label, size=5)
+                if bookmark_target is not None:
+                    c.linkRect("", bookmark_target, (x, y, x + cell_width, y + cell_height), relative=0, thickness=0)
+                else:
+                    c.saveState()
+                    c.setFillGray(0.80)
+                    c.rect(x + 0.7 * mm, y + 0.7 * mm, cell_width - 1.4 * mm, cell_height - 1.4 * mm, stroke=0, fill=1)
+                    c.restoreState()
+                    text(c, x + 1.3 * mm, y + cell_height - 5 * mm, f"{day_number:02d}", size=8, font_name="Helvetica-Bold")
+                    text(c, x + cell_width - 1.2 * mm - 10, y + 2.2 * mm, day_label, size=5)
+
     draw_page_number(c, page_number)
 
 
@@ -326,6 +443,10 @@ def compute_page_map(daily_count: int, free_pages_count: int) -> dict[str, int]:
     page += 1
     page_map["MONTHS"] = page
     page += 1
+    page_map["DAYS"] = page
+    for bookmark, _, _ in QUARTERS:
+        page_map[bookmark] = page
+        page += 1
     for month_idx in range(1, 13):
         page_map[f"MONTH_{month_idx:02d}_L"] = page
         page += 1
@@ -363,6 +484,9 @@ def build(output_path: str | Path, daily_count: int = DEFAULT_TEST_DAILY_COUNT, 
     c.showPage(); page_number += 1
     render_months_index_page(c, page_number, page_map, year=year)
     c.showPage(); page_number += 1
+    for bookmark, months, subtitle in QUARTERS:
+        render_days_quarter_page(c, page_number, page_map, daily_count, year, months, bookmark, subtitle)
+        c.showPage(); page_number += 1
     month_day_counts = month_day_counts_for_year(year)
     for idx, (month_name, month_day_count) in enumerate(zip(MONTH_NAMES, month_day_counts), start=1):
         bookmark_left = f"MONTH_{idx:02d}_L"; bookmark_right = f"MONTH_{idx:02d}_R"; left_days, right_days = split_month_day_count(month_day_count)

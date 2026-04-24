@@ -1,10 +1,31 @@
 # Notewise Bullet Generator
 
+## Statut du projet
+
+Projet considéré comme **clos provisoirement**.
+
+Pour reprendre le projet dans plusieurs mois, lire d’abord :
+
+```text
+PROJECT_CLOSURE.md
+```
+
+Puis, si nécessaire :
+
+```text
+DOCUMENTATION.md
+build_year.py
+```
+
+---
+
 ## 1. Objectif du projet
 
-Ce projet vise à construire un **bullet journal numérique complet**, optimisé pour une utilisation sur tablette avec stylet.
+Ce projet vise à construire un **bullet journal numérique complet**, optimisé pour une utilisation sur tablette avec stylet, en particulier dans Notewise.
 
-L’objectif n’est pas simplement de produire un PDF, mais de créer un **outil de travail quotidien structuré, rapide et robuste**, équivalent (voire supérieur) à un bullet journal papier.
+L’objectif n’est pas simplement de produire un PDF, mais de créer un **outil de travail quotidien structuré, rapide, robuste et navigable**, équivalent ou supérieur à un bullet journal papier.
+
+Le PDF porte la structure. Notewise sert à écrire, annoter et naviguer.
 
 ---
 
@@ -14,265 +35,280 @@ L’objectif n’est pas simplement de produire un PDF, mais de créer un **outi
 
 Contrairement à un bullet papier :
 
-- les pages fixes ne bougent jamais
-- les emplacements sont constants
-- la navigation devient réflexe
+- les pages fixes ne bougent jamais ;
+- les emplacements sont constants ;
+- la navigation devient réflexe ;
+- l’utilisateur ne redessine pas la structure.
 
-👉 Cela réduit fortement la charge cognitive.
-
----
+Cela réduit fortement la charge cognitive.
 
 ### 2.2 Séparation structure / contenu
 
-Le système repose sur deux blocs :
+**Structure fixe générée :**
 
-**Structure fixe (pré-générée)**
-- index
-- mois
-- collections
-- pages de navigation
+- index ;
+- pages semestres ;
+- page MOIS ;
+- section JOURS ;
+- pages mensuelles ;
+- collections ;
+- onglets latéraux ;
+- hyperliens internes.
 
-**Zone vivante (daily)**
-- écriture libre
-- adaptation au réel
+**Zone vivante écrite au stylet :**
 
-👉 On ne redessine jamais la structure.
-👉 On se concentre uniquement sur l’usage.
-
----
+- daily ;
+- notes ;
+- reports ;
+- réflexions ;
+- contenus libres.
 
 ### 2.3 Navigation rapide
 
-Chaque page contient des accès directs vers :
-- INDEX
-- MOIS
-- JOURS
-- PARKING
-- PRIÈRES
+Chaque page importante donne accès aux sections principales :
 
-👉 Le carnet devient **navigable comme une application**.
+- INDEX ;
+- MOIS ;
+- JOURS ;
+- PARKING ;
+- PRIÈRES ;
+- LIBRE.
 
----
+Les onglets latéraux sont maintenant stabilisés visuellement :
 
-### 2.4 Minimalisme fonctionnel
-
-Le design est volontairement :
-- sobre
-- basé sur une grille régulière
-- sans surcharge
-
-👉 objectif : écrire vite et penser vite.
+- fond discret ;
+- coins arrondis ;
+- contraste légèrement renforcé ;
+- texte mieux centré ;
+- onglet actif mis en évidence selon la section courante.
 
 ---
 
 ## 3. Choix de Notewise
 
-### 3.1 Pourquoi Notewise
+Notewise a été retenu pour :
 
-Le choix de Notewise repose sur :
+- la qualité de l’écriture au stylet ;
+- la fluidité ;
+- la bonne gestion de PDF volumineux ;
+- le support des hyperliens internes.
 
-- excellente gestion du stylet
-- fluidité d’écriture
-- bonne gestion des PDF volumineux
-- support des hyperliens internes
-
-👉 Notewise permet d’utiliser le PDF comme un **outil interactif réel**.
-
----
-
-### 3.2 Logique d’usage
-
-Le PDF devient :
-
-- le support principal
-- le système de navigation
-- la structure du travail
-
-👉 L’application sert uniquement de support.
+Le projet ne dépend pas d’une logique interne de Notewise : le PDF doit rester autonome.
 
 ---
 
 ## 4. Architecture technique
 
-### 4.1 core/
+Structure actuelle :
 
-Contient les briques fondamentales :
+```text
+notewise_bullet_generator/
+├── core/
+│   ├── config.py
+│   ├── geometry.py
+│   ├── grid.py
+│   ├── draw.py
+│   └── text.py
+├── pages/
+│   ├── dots_page.py
+│   ├── month_left_validated.py
+│   ├── month_right_validated.py
+│   └── daily_validated.py
+├── build_demo.py
+├── build_month.py
+├── build_year.py
+├── README.md
+├── DOCUMENTATION.md
+└── PROJECT_CLOSURE.md
+```
 
-- config : paramètres globaux
-- geometry : coordonnées
-- grid : dimensions
-- draw : primitives graphiques
-- text : gestion du texte
+### Fichier principal
 
-👉 Toute la logique graphique est centralisée ici.
+Le générateur annuel complet est actuellement :
 
-### 4.1.1 Règles techniques stables
+```text
+build_year.py
+```
 
-Le projet repose sur quelques règles strictes :
+C’est le fichier à relire en priorité pour comprendre l’état réel du générateur annuel.
 
-- alignement sur une **grille 5 mm**
-- aucune coordonnée libre hors système de grille
-- usage systématique de `gx()` et `gy()` pour les placements
-- dessin via `draw_dots()`, `hline()`, `vline()`
-- helpers texte `text()` et `text_right()`
-
-Les helpers texte acceptent désormais un paramètre optionnel `font_name`, ce qui permet de conserver une API simple tout en autorisant des variations typographiques localisées.
-
----
-
-### 4.2 pages/
-
-Chaque page est un module indépendant :
-
-- dots
-- mois gauche
-- mois droite
-- daily
-
-👉 Chaque page est testable séparément.
+Les fichiers dans `pages/` correspondent à des briques ou versions validées antérieures. La daily réellement utilisée par le PDF annuel est celle codée dans `build_year.py`.
 
 ---
 
-### 4.3 assembleurs
+## 5. Conventions graphiques
 
-- build_demo : test rapide
-- build_month : mois complet
-- build_year : carnet complet
+Le projet repose sur :
 
-👉 Les assembleurs orchestrent les pages.
+- format A5 ;
+- marge 10 mm ;
+- grille 5 mm ;
+- fond pointillé ;
+- usage de `gx()` et `gy()` ;
+- helpers `draw_dots()`, `hline()`, `vline()` ;
+- helpers texte `text()` et `text_right()` ;
+- ReportLab pour la génération PDF.
 
----
+Constantes principales dans `core/config.py` :
 
-### 4.4 Grille
-
-Principe fondamental :
-
-- grille 5 mm
-- alignement strict
-- aucune approximation
-
-👉 garantit cohérence et lisibilité.
-
----
-
-## 5. Daily page actuelle
-
-La daily page actuellement retenue suit la logique suivante :
-
-- zone **PRIORITÉS** en haut avec **4 cases**
-- colonne **TEMPS** à gauche
-- colonne **TÂCHES** à droite avec **5 cases**
-- zone **NOTES** positionnée dans la partie droite basse
-- zone **REPORT / À MIGRER** remontée dans la partie gauche basse
-- page pointillée libre en seconde page du couple daily
-
-👉 Cette structure correspond à la version ajustée après relecture visuelle et annotations sur PDF.
+```python
+PAGE_SIZE = A5
+MARGIN_MM = 10
+GRID_STEP_MM = 5
+FONT = "Helvetica"
+FONT_SIZE = 8
+```
 
 ---
 
-## 6. Nouvelle section JOURS
+## 6. État fonctionnel validé
 
-Une nouvelle section **JOURS** a été ajoutée pour retrouver rapidement une daily après avoir quitté la page en cours.
+### 6.1 Section JOURS
 
-### 6.1 Rôle
+La section **JOURS** est validée.
 
-Ces pages servent de **hub de retour** vers les daily pages.
+Elle comprend 4 pages trimestrielles :
 
-Chaque jour affiché pointe vers la daily correspondante quand elle existe.
+- Janvier à Mars ;
+- Avril à Juin ;
+- Juillet à Septembre ;
+- Octobre à Décembre.
 
-### 6.2 Structure retenue
+Chaque mois est affiché comme mini-calendrier.
 
-Le choix retenu est une version inspirée du **prototype B** :
+Chaque case contient :
 
-- navigation par **trimestres**
-- **4 pages** :
-  - Janvier à Mars
-  - Avril à Juin
-  - Juillet à Septembre
-  - Octobre à Décembre
-- chaque bloc mensuel est présenté comme un mini-calendrier
-- chaque case affiche :
-  - le **numéro du jour**
-  - le **jour de semaine abrégé**
-- la **case entière** est cliquable
+- le numéro du jour ;
+- le jour de semaine abrégé.
 
-### 6.3 Direction visuelle
+Les samedis et dimanches ont un fond gris discret.
 
-Le style retenu est :
+Quand la daily existe, la case entière du jour est cliquable.
 
-- sobre
-- inspiré d’un calendrier compact
-- avec une **couleur bleu grisé discrète**
-- panneaux légèrement teintés pour un usage fréquent et confortable
+### 6.2 Daily page
 
----
+La daily actuelle contient :
 
-## 7. Hyperliens PDF
+- Date ;
+- Jour ;
+- PRIORITÉS avec 4 cases ;
+- TEMPS ;
+- TÂCHES avec 5 cases ;
+- NOTES ;
+- REPORT / À MIGRER ;
+- INDEXER ? ;
+- Entrée index ;
+- une seconde page pointillée libre.
 
-Le système utilise :
+Le libellé `NOTES` a été abaissé pour l’éloigner du dernier carré de tâches.
 
-- `bookmarkPage` → ancrages
-- `linkRect` → zones cliquables
+Position actuelle dans `build_year.py` :
 
-👉 Permet une navigation rapide dans le carnet.
+```python
+text(c, gx(mid_col + 1), gy(notes_label_row) + 1 - 3 * mm, "NOTES")
+```
 
----
+### 6.3 Collections
 
-## 8. État actuel
+Collections prévues :
 
-Le projet permet déjà :
+- Parking ;
+- Parking — suite ;
+- Achats ;
+- Grandes idées ;
+- Prières 1 à 4 ;
+- Libre 1 à 6.
 
-- génération des pages validées
-- génération d’un mois complet
-- génération d’un carnet annuel (démo)
-- navigation interne fonctionnelle
-- daily layout mis à jour selon les derniers retours visuels
-- section **JOURS** trimestrielle codée dans `build_year.py`
-
-Point de vigilance :
-
-- tant que `DEFAULT_TEST_DAILY_COUNT = 14`, seules les premières daily existent réellement dans la génération de test ; les pages **JOURS** sont structurellement prêtes, mais une couverture annuelle complète demande ensuite une génération de **365 daily**.
+Les collections restent volontairement sobres.
 
 ---
 
-## 9. Évolutions prévues
+## 7. Utilisation
 
-- navigation vers le mois courant
-- index enrichi
-- génération 365 jours
-- amélioration ergonomique tablette
-- affinement visuel éventuel des pages **JOURS** après test réel
+Depuis le dossier :
 
----
+```text
+notewise_bullet_generator/
+```
 
-## 10. Principe fondamental
-
-👉 on ne génère pas un PDF
-👉 on construit un système
-
----
-
-## 11. Utilisation
+installer la dépendance :
 
 ```bash
 pip install reportlab
+```
+
+lancer le générateur annuel :
+
+```bash
 python build_year.py
 ```
 
-Sortie :
+Sorties actuelles :
 
-```bash
-output/year_demo.pdf
+```text
+output/year_generic_test.pdf
+output/year_2026_test.pdf
 ```
 
 ---
 
-## 12. Conclusion
+## 8. Mode test actuel
 
-Ce projet transforme le bullet journal en :
+Le projet est encore configuré en mode test annuel :
 
-- système structuré
-- outil navigable
-- support de travail quotidien
+```python
+DEFAULT_TEST_DAILY_COUNT = 14
+```
 
-👉 objectif : simplicité, stabilité, efficacité
+Conséquence :
+
+- les pages fixes sont générées ;
+- les pages JOURS couvrent toute l’année ;
+- seules les 14 premières daily existent ;
+- une génération annuelle complète nécessitera ensuite 365 daily.
+
+Avec 14 daily, le PDF annuel de test comporte 75 pages.
+
+Une version complète avec 365 daily ferait environ 777 pages.
+
+---
+
+## 9. Points de vigilance
+
+Avant toute reprise :
+
+1. lire `PROJECT_CLOSURE.md` ;
+2. lancer `python build_year.py` ;
+3. ouvrir `output/year_2026_test.pdf` dans Notewise ;
+4. tester les liens ;
+5. tester la fluidité ;
+6. tester l’écriture au stylet ;
+7. décider seulement ensuite d’une éventuelle génération 365 jours.
+
+Ne pas refactorer brutalement `build_year.py`. Le fichier est long, mais il représente l’état consolidé validé.
+
+---
+
+## 10. Pistes futures non prioritaires
+
+- génération complète 365 jours ;
+- année paramétrable ;
+- nombre de daily paramétrable ;
+- amélioration de la page MOIS ;
+- structuration légère de certaines collections ;
+- extraction progressive de `build_year.py` en modules ;
+- tests automatiques simples : génération sans erreur, nombre de pages, existence de bookmarks.
+
+---
+
+## 11. Principe fondamental
+
+On ne génère pas seulement un PDF.
+
+On construit un système de travail quotidien :
+
+- stable ;
+- sobre ;
+- navigable ;
+- adapté au stylet ;
+- suffisamment simple pour être utilisé réellement.

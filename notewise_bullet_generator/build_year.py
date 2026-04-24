@@ -422,7 +422,7 @@ def render_daily(c, page_number_1: int, page_number_2: int, page1_bookmark: str 
     vline(c, gx(mid_col), gy(sep_row), gy(bottom_split_row))
     hline(c, gx(mid_col), gy(notes_divider_row), right_x)
 
-    text(c, gx(mid_col + 1), gy(notes_label_row) + 3, "NOTES")
+    text(c, gx(mid_col + 1), gy(notes_label_row) + 1 - 3 * mm, "NOTES")
     text(c, gx(0), gy(report_label_row) + 3, "REPORT / À MIGRER")
     text(c, gx(0), gy(1), "INDEXER ? [ ] oui")
     text(c, gx(8), gy(1), "Entrée index :")

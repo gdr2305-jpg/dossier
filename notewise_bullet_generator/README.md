@@ -30,6 +30,7 @@ Le système repose sur deux blocs :
 - index
 - mois
 - collections
+- pages de navigation
 
 **Zone vivante (daily)**
 - écriture libre
@@ -45,6 +46,7 @@ Le système repose sur deux blocs :
 Chaque page contient des accès directs vers :
 - INDEX
 - MOIS
+- JOURS
 - PARKING
 - PRIÈRES
 
@@ -168,18 +170,55 @@ La daily page actuellement retenue suit la logique suivante :
 
 ---
 
-## 6. Hyperliens PDF
+## 6. Nouvelle section JOURS
+
+Une nouvelle section **JOURS** a été ajoutée pour retrouver rapidement une daily après avoir quitté la page en cours.
+
+### 6.1 Rôle
+
+Ces pages servent de **hub de retour** vers les daily pages.
+
+Chaque jour affiché pointe vers la daily correspondante quand elle existe.
+
+### 6.2 Structure retenue
+
+Le choix retenu est une version inspirée du **prototype B** :
+
+- navigation par **trimestres**
+- **4 pages** :
+  - Janvier à Mars
+  - Avril à Juin
+  - Juillet à Septembre
+  - Octobre à Décembre
+- chaque bloc mensuel est présenté comme un mini-calendrier
+- chaque case affiche :
+  - le **numéro du jour**
+  - le **jour de semaine abrégé**
+- la **case entière** est cliquable
+
+### 6.3 Direction visuelle
+
+Le style retenu est :
+
+- sobre
+- inspiré d’un calendrier compact
+- avec une **couleur bleu grisé discrète**
+- panneaux légèrement teintés pour un usage fréquent et confortable
+
+---
+
+## 7. Hyperliens PDF
 
 Le système utilise :
 
-- bookmarkPage → ancrages
-- linkRect → zones cliquables
+- `bookmarkPage` → ancrages
+- `linkRect` → zones cliquables
 
 👉 Permet une navigation rapide dans le carnet.
 
 ---
 
-## 7. État actuel
+## 8. État actuel
 
 Le projet permet déjà :
 
@@ -188,26 +227,32 @@ Le projet permet déjà :
 - génération d’un carnet annuel (démo)
 - navigation interne fonctionnelle
 - daily layout mis à jour selon les derniers retours visuels
+- section **JOURS** trimestrielle codée dans `build_year.py`
+
+Point de vigilance :
+
+- tant que `DEFAULT_TEST_DAILY_COUNT = 14`, seules les premières daily existent réellement dans la génération de test ; les pages **JOURS** sont structurellement prêtes, mais une couverture annuelle complète demande ensuite une génération de **365 daily**.
 
 ---
 
-## 8. Évolutions prévues
+## 9. Évolutions prévues
 
 - navigation vers le mois courant
 - index enrichi
 - génération 365 jours
 - amélioration ergonomique tablette
+- affinement visuel éventuel des pages **JOURS** après test réel
 
 ---
 
-## 9. Principe fondamental
+## 10. Principe fondamental
 
 👉 on ne génère pas un PDF
 👉 on construit un système
 
 ---
 
-## 10. Utilisation
+## 11. Utilisation
 
 ```bash
 pip install reportlab
@@ -222,7 +267,7 @@ output/year_demo.pdf
 
 ---
 
-## 11. Conclusion
+## 12. Conclusion
 
 Ce projet transforme le bullet journal en :
 

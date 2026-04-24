@@ -45,6 +45,10 @@ DAYS_PANEL_FILL = Color(0.96, 0.97, 0.98)
 DAYS_WEEKDAY_FILL = Color(0.93, 0.95, 0.97)
 DAYS_WEEKEND_FILL = Color(0.90, 0.90, 0.90)
 DAYS_BORDER_COLOR = Color(0.55, 0.63, 0.70)
+TAB_FILL = Color(0.97, 0.98, 0.99)
+TAB_ACTIVE_FILL = Color(0.87, 0.91, 0.94)
+TAB_BORDER_COLOR = Color(0.45, 0.50, 0.55)
+TAB_ACTIVE_BORDER_COLOR = Color(0.25, 0.35, 0.45)
 SECTION_TITLE_COLORS = {
     "Parking": (0.34, 0.25, 0.18),
     "Achats": (0.14, 0.35, 0.32),
@@ -99,24 +103,44 @@ def draw_header_links(c, rows: int, right_x: float | None = None) -> None:
         x = left - 6
 
 
-def draw_side_tabs(c) -> None:
+def draw_side_tabs(c, active_target: str | None = None) -> None:
     cols, rows = grid_size()
     tab_left = gx(cols - 1.65)
     tab_right = PAGE_WIDTH
+    tab_width = tab_right - tab_left
     tab_height = gy(1.7) - gy(0)
     top_start = gy(rows) - tab_height - 1
     gap = gy(0.2) - gy(0)
 
     c.saveState()
-    c.setLineWidth(0.5)
     for idx, (label, target) in enumerate(SIDE_TABS):
         top = top_start - idx * (tab_height + gap)
         bottom = top - tab_height
-        c.rect(tab_left, bottom, tab_right - tab_left, tab_height, stroke=1, fill=0)
-        c.setFont("Helvetica", 6)
-        c.drawString(tab_left + 2, bottom + tab_height / 2 - 2, label)
+        is_active = target == active_target
+
+        c.setLineWidth(0.8 if is_active else 0.55)
+        c.setFillColor(TAB_ACTIVE_FILL if is_active else TAB_FILL)
+        c.setStrokeColor(TAB_ACTIVE_BORDER_COLOR if is_active else TAB_BORDER_COLOR)
+        c.roundRect(tab_left, bottom, tab_width, tab_height, 1.4 * mm, stroke=1, fill=1)
+
+        c.setFillColorRGB(0.08, 0.10, 0.12)
+        c.setFont("Helvetica-Bold" if is_active else "Helvetica", 6)
+        c.drawString(tab_left + 2.2, bottom + tab_height / 2 - 2.1, label)
         c.linkRect("", target, (tab_left, bottom, tab_right, top), relative=0, thickness=0)
     c.restoreState()
+
+
+def active_tab_for_notes_page(header_left: str, bookmark: str | None) -> str | None:
+    side_tab_targets = {target for _, target in SIDE_TABS}
+    if bookmark in side_tab_targets:
+        return bookmark
+    if header_left.startswith("Parking"):
+        return "PARKING"
+    if header_left.startswith("Prières"):
+        return "PRAYERS"
+    if header_left.startswith("Libre"):
+        return "LIBRE"
+    return None
 
 
 def draw_page_number(c, page_number: int) -> None:
@@ -155,7 +179,7 @@ def render_simple_index_page(c, page_number: int, page_map: dict[str, int], titl
     _, rows = grid_size()
     c.bookmarkPage("INDEX")
     draw_dots(c)
-    draw_side_tabs(c)
+    draw_side_tabs(c, active_target="INDEX")
     draw_title(c, gy(rows) + 2, title, size=22)
     text(c, gx(2), gy(rows - 2) + 2, "Navigation générale", size=9, font_name="Helvetica-Oblique")
     lines = [
@@ -178,7 +202,7 @@ def render_months_index_page(c, page_number: int, page_map: dict[str, int], year
     _, rows = grid_size()
     c.bookmarkPage("MONTHS")
     draw_dots(c)
-    draw_side_tabs(c)
+    draw_side_tabs(c, active_target="MONTHS")
     draw_title(c, gy(rows) + 2, "MOIS", size=20)
     left_x = gx(1)
     right_x = gx(10)
@@ -206,7 +230,7 @@ def render_simple_notes_page(c, page_number: int, header_left: str, bookmark: st
     if bookmark:
         c.bookmarkPage(bookmark)
     draw_dots(c)
-    draw_side_tabs(c)
+    draw_side_tabs(c, active_target=active_tab_for_notes_page(header_left, bookmark))
     if header_left.startswith(("Parking", "Achats", "Grandes idées", "Prières")):
         draw_section_title(c, gy(rows) + 2, header_left)
     else:
@@ -236,7 +260,7 @@ def render_days_quarter_page(
     if bookmark == "JOURS_T1":
         c.bookmarkPage("DAYS")
     draw_dots(c)
-    draw_side_tabs(c)
+    draw_side_tabs(c, active_target="DAYS")
     draw_title(c, gy(rows) + 2, "JOURS", size=21, color=DAYS_TITLE_COLOR.rgb())
     text(c, gx(1), gy(rows - 1.7) + 2, subtitle, size=9, font_name="Helvetica-Oblique")
 
@@ -357,7 +381,7 @@ def render_daily(c, page_number_1: int, page_number_2: int, page1_bookmark: str 
     if page1_bookmark:
         c.bookmarkPage(page1_bookmark)
     draw_dots(c)
-    draw_side_tabs(c)
+    draw_side_tabs(c, active_target="DAYS")
     top = rows
     date_value = date_label if date_label is not None else ""
     day_value = day_label if day_label is not None else ""
@@ -407,7 +431,7 @@ def render_daily(c, page_number_1: int, page_number_2: int, page1_bookmark: str 
     if page2_bookmark:
         c.bookmarkPage(page2_bookmark)
     draw_dots(c)
-    draw_side_tabs(c)
+    draw_side_tabs(c, active_target="DAYS")
     draw_page_number(c, page_number_2)
 
 
